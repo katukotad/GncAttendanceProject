@@ -3,10 +3,9 @@ package com.example.secureapplication.gncattendance;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.method.PasswordTransformationMethod;
@@ -21,37 +20,30 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 
-public class ExceptionsFragment extends Fragment {
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class SettingsFragment extends Fragment {
 
 
-    public ExceptionsFragment() {
-        // Required empty public constructor
+    public SettingsFragment() {
+        // Re
+        //
+        // quired empty public constructor
     }
-
     boolean isThreadComplete=false;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View v=inflater.inflate(R.layout.fragment_exceptions, container, false);
-
-        Button onduty=(Button)v.findViewById(R.id.exceptionFragmentOnDutyButton);
-        Button report=(Button)v.findViewById(R.id.exceptionFragmentReportAttendanceButton);
-//        Button late=(Button)v.findViewById(R.id.exceptionFragmentLateAttendanceButton);
-        Button newClass=(Button)v.findViewById(R.id.exceptionFragmentDifferentClassAttendanceButton);
-        Button passwordChange=(Button)v.findViewById(R.id.exceptionFragmentPasswordChangeAttendanceButton);
-        newClass.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Fragment fg = NewClassFragment.newInstance();
-                FragmentManager manager = getFragmentManager();
-                FragmentTransaction transaction = manager.beginTransaction();
-                transaction.replace(R.id.fragmentholder, fg);
-                transaction.addToBackStack(null);
-                transaction.commit();
-            }
-        });
-        passwordChange.setOnClickListener(new View.OnClickListener() {
+        final View v=inflater.inflate(R.layout.fragment_settings, container, false);
+        Button password=(Button)v.findViewById(R.id.settingsFragmentPasswordChangeButton);
+        password.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 /* Alert Dialog Code Start*/
@@ -108,6 +100,8 @@ public class ExceptionsFragment extends Fragment {
                                                 try {
                                                     JSONObject jsonObject = new JSONObject(login);
                                                     a[0] = http.doInBackground("staffId=" + jsonObject.optString("staffId") + "&newPassword=" + nPass.toString() + "&oldPassword=" + oPass.toString());
+
+
                                                 } catch (Exception e) {
                                                     e.printStackTrace();
                                                 }
@@ -151,47 +145,74 @@ public class ExceptionsFragment extends Fragment {
                 alert.show();
             }
         });
-        onduty.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                Toast.makeText(getActivity(), "Access Denied", Toast.LENGTH_SHORT).show();
-                /*Fragment fg = OnDutyFragment.newInstance();
-                FragmentManager manager = getFragmentManager();
-                FragmentTransaction transaction = manager.beginTransaction();
-                transaction.replace(R.id.fragmentholder, fg);
-                transaction.addToBackStack(null);
-                transaction.commit();*/
-            }
-        });
-        report.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Fragment fg = reportFragment.newInstance();
-                FragmentManager manager = getFragmentManager();
-                FragmentTransaction transaction = manager.beginTransaction();
-                transaction.replace(R.id.fragmentholder, fg);
-                transaction.addToBackStack(null);
-                transaction.commit();
-            }
-        });
-//        late.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Fragment fg = AttendanceTakenListFragment.newInstance();
-//                FragmentManager manager = getFragmentManager();
-//                FragmentTransaction transaction = manager.beginTransaction();
-//                transaction.replace(R.id.fragmentholder, fg);
-//                transaction.addToBackStack(null);
-//                transaction.commit();
-//            }
-//        });
         return v;
     }
     public static android.support.v4.app.Fragment newInstance() {
-        ExceptionsFragment mFrgment = new ExceptionsFragment();
+        SettingsFragment mFrgment = new SettingsFragment();
         return mFrgment;
     }
 
+}
+class HttpSendChangePassword extends AsyncTask<String, Void, String>
+{
+    HttpURLConnection c = null;
 
+    @Override
+    protected String doInBackground(String... str) {
+        try {
+            String get_url = str[0].replace(" ", "%20");
+
+            int timeout = 3000;
+
+            URL u = new URL(Gobal.CallUrl+"changepassword.php?"+get_url);
+            c = (HttpURLConnection) u.openConnection();
+            c.setRequestMethod("GET");
+            c.setRequestProperty("Content-length", "0");
+            c.setUseCaches(false);
+            c.setAllowUserInteraction(false);
+            c.setConnectTimeout(timeout);
+            c.setReadTimeout(timeout);
+            c.connect();
+            int status = c.getResponseCode();
+
+            switch (status) {
+                case 200:
+                case 201:
+                    BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream()));
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        sb.append(line+"\n");
+                    }
+                    br.close();
+                    return sb.toString();
+            }
+
+
+            /*HttpParams httpParameters = new BasicHttpParams();
+            int timeoutConnection = 3000;
+            HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
+            int timeoutSocket = 60000;
+            HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
+            HttpClient Client = new DefaultHttpClient(httpParameters);
+            HttpGet httpget;
+            ResponseHandler<String> responseHandler = new BasicResponseHandler();
+            httpget = new HttpGet(Gobal.CallUrl + "studentabsentee.php?" + get_url);
+            String content = Client.execute(httpget, responseHandler);
+            //Toast.makeText(MainActivity.getAppContext(),"Saved",Toast.LENGTH_SHORT).show();
+            return content;*/
+        } catch (Exception e) {
+            e.printStackTrace();
+            //Toast.makeText(MainActivity.getAppContext(),"Connection Failed",Toast.LENGTH_SHORT).show();
+        }finally {
+            if (c != null) {
+                try {
+                    c.disconnect();
+                } catch (Exception ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        return "connection Failed";
+    }
 }

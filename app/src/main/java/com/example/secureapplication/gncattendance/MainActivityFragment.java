@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,8 +16,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -34,6 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class MainActivityFragment extends Fragment {
+    private android.app.FragmentManager fragmentManager;
 
    /* public static android.support.v4.app.Fragment newInstance() {
         MainActivityFragment mFrgment = new MainActivityFragment();
@@ -215,6 +213,8 @@ public class MainActivityFragment extends Fragment {
         mFrgment = new MainActivityFragment();
         return mFrgment;
     }
+
+
 
     //login Server call starts
     String a1="";
